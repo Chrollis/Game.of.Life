@@ -139,30 +139,30 @@ void Game::input(const ExMessage& msg) {
 		}
 		break;
 	case WM_LBUTTONDOWN:
-		current_cells((camera.coor.x + msg.x) / scale + block_size * 2,
-			(camera.coor.y + msg.y) / scale + block_size * 2).alive = 1;
-		current_cells((camera.coor.x + msg.x + block_size * 2) / scale,
-			(camera.coor.y + msg.y) / scale + block_size * 2).signal = 1;
+		current_cells((camera.coor.x + msg.x + block_size * 2 * scale) / scale,
+			(camera.coor.y + msg.y + block_size * 2 * scale) / scale).alive = 1;
+		current_cells((camera.coor.x + msg.x + block_size * 2 * scale) / scale,
+			(camera.coor.y + msg.y + block_size * 2 * scale) / scale).signal = 1;
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 3; i++) {
-				if ((camera.coor.x + msg.x) / scale + block_size * 2 - 1 + i >= 0 && (camera.coor.x + msg.x) / scale + block_size * 2 - 1 + i < 5 * block_size) {
-					if ((camera.coor.y + msg.y) / scale + block_size * 2 - 1 + j >= 0 && (camera.coor.y + msg.y) / scale + block_size * 2 - 1 + j < 5 * block_size) {
-						current_cells((camera.coor.x + msg.x) / scale + block_size * 2 - 1 + i, (camera.coor.y + msg.y) / scale + block_size * 2 - 1 + j).signal = 1;
+				if ((camera.coor.x + msg.x + block_size * 2 * scale) / scale - 1 + i >= 0 && (camera.coor.x + msg.x + block_size * 2 * scale) / scale - 1 + i < 5 * block_size) {
+					if ((camera.coor.y + msg.y + block_size * 2 * scale) / scale - 1 + j >= 0 && (camera.coor.y + msg.y + block_size * 2 * scale) / scale - 1 + j < 5 * block_size) {
+						current_cells((camera.coor.x + msg.x + block_size * 2 * scale) / scale - 1 + i, (camera.coor.y + msg.y + block_size * 2 * scale) / scale - 1 + j).signal = 1;
 					}
 				}
 			}
 		}
 		break;
 	case WM_RBUTTONDOWN:
-		current_cells((camera.coor.x + msg.x) / scale + block_size * 2,
-			(camera.coor.y + msg.y) / scale + block_size * 2).alive = 0;
-		current_cells((camera.coor.x + msg.x) / scale + block_size * 2,
-			(camera.coor.y + msg.y) / scale + block_size * 2).signal = 0;
+		current_cells((camera.coor.x + msg.x + block_size * 2 * scale) / scale,
+			(camera.coor.y + msg.y + block_size * 2 * scale) / scale).alive = 0;
+		current_cells((camera.coor.x + msg.x + block_size * 2 * scale) / scale,
+			(camera.coor.y + msg.y + block_size * 2 * scale) / scale).signal = 0;
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 3; i++) {
-				if ((camera.coor.x + msg.x) / scale + block_size * 2 - 1 + i >= 0 && (camera.coor.x + msg.x) / scale + block_size * 2 - 1 + i < 5 * block_size) {
-					if ((camera.coor.y + msg.y) / scale + block_size * 2 - 1 + j >= 0 && (camera.coor.y + msg.y) / scale + block_size * 2 - 1 + j < 5 * block_size) {
-						current_cells((camera.coor.x + msg.x) / scale + block_size * 2 - 1 + i, (camera.coor.y + msg.y) / scale + block_size * 2 - 1 + j).signal = 1;
+				if ((camera.coor.x + msg.x + block_size * 2 * scale) / scale - 1 + i >= 0 && (camera.coor.x + msg.x + block_size * 2 * scale) / scale - 1 + i < 5 * block_size) {
+					if ((camera.coor.y + msg.y + block_size * 2 * scale) / scale - 1 + j >= 0 && (camera.coor.y + msg.y + block_size * 2 * scale) / scale - 1 + j < 5 * block_size) {
+						current_cells((camera.coor.x + msg.x + block_size * 2 * scale) / scale - 1 + i, (camera.coor.y + msg.y + block_size * 2 * scale) / scale - 1 + j).signal = 1;
 					}
 				}
 			}
