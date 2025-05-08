@@ -1,45 +1,41 @@
 #include "game.h"
 
-Game gaming;
-
 int __stdcall WinMain(
     _In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPSTR lpCmdLine,
     _In_ int nShowCmd) {
+    Game game;
+    ExMessage msg;
     clock_t last_tick = clock();
     clock_t current_tick = clock();
-    ExMessage msg;
 
-    initgraph(graph_side_length, graph_side_length);
-    gaming.enter();
-    gaming.fps_controller.set(12);
+    initgraph(GRAPHSIZE, GRAPHSIZE, EX_NOCLOSE);
+    game.enter();
+    game.fps_controller.set(FPS);
 
     BeginBatchDraw();
 
     while (1) {
-        gaming.fps_controller.start();
+        game.fps_controller.start();
 
         while (peekmessage(&msg)) {
-            gaming.input(msg);
+            game.input(msg);
         }
 
         current_tick = clock();
-        gaming.proceed(current_tick - last_tick);
+        game.proceed(current_tick - last_tick);
         last_tick = current_tick;
 
         cleardevice();
-        gaming.draw();
-        gaming.fps_controller.draw();
+        game.draw();
+        game.fps_controller.draw();
 
         FlushBatchDraw();
-
-        gaming.fps_controller.delay();
+        game.fps_controller.delay();
     }
 
     EndBatchDraw();
-
-    
     closegraph();
     return 0;
 }

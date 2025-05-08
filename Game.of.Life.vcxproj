@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c443da0c-c5fc-4da3-a1f3-81852eb070cb}</ProjectGuid>
+    <ProjectGuid>{28216609-35fd-4819-a98c-731c917d9108}</ProjectGuid>
     <RootNamespace>GameofLife</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -129,19 +129,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="cell.h" />
-    <ClInclude Include="fps_controller.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="util.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Game of Life.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cell.cpp" />
+    <ClCompile Include="game.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
