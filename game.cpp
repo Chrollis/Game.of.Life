@@ -153,12 +153,12 @@ void Game::input(const ExMessage& msg) {
 }
 void Game::draw() {
 	int visible = GRAPHSIZE / scale;
-	int x = camera.x / scale * scale - camera.x ;
-	int y = camera.y / scale * scale - camera.y ;
+	int x = (camera.x + BLOCKCELL * 2 * scale) / scale * scale - camera.x - BLOCKCELL * 2 * scale;
+	int y = (camera.y + BLOCKCELL * 2 * scale) / scale * scale - camera.y - BLOCKCELL * 2 * scale;
 	for (int row = -1; row <= visible; row++) {
 		for (int col = -1; col <= visible; col++) {
-			if (cells(camera.y / scale + BLOCKCELL * 2+ row,
-				camera.x  / scale + BLOCKCELL * 2  + col).alive) {
+			if (cells((camera.y + BLOCKCELL * 2 * scale) / scale + row,
+				(camera.x + BLOCKCELL * 2 * scale) / scale + col).alive) {
 				setfillcolor(WHITE);
 				fillrectangle(x + col * scale, y + row * scale,
 					x + col * scale + scale, y + row * scale + scale);
