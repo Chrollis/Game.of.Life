@@ -10,7 +10,7 @@ int __stdcall WinMain(
     clock_t last_tick = clock();
     clock_t current_tick = clock();
 
-    initgraph(GRAPHSIZE, GRAPHSIZE, EX_NOCLOSE);
+    initgraph(GRAPH_SIZE, GRAPH_SIZE, EX_NOCLOSE);
     game.enter();
     game.fps_controller.set(FPS);
 

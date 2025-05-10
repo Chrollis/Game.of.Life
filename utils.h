@@ -11,10 +11,10 @@ using Eigen::Matrix;
 using Eigen::Vector;
 using Eigen::Block;
 
-#define BLOCKCELL 16
-#define WHOLECELL 80
-#define ORISCALE 50
-#define GRAPHSIZE 800
+#define BSC 16 //block side cell num
+#define ORI_WSB 5//original whole side block num
+#define ORI_SCALE 50
+#define GRAPH_SIZE 800
 
 wstring string_to_wstring(const string& str);
 #define string_to_lpcwstr(x) string_to_wstring(x).c_str()

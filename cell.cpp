@@ -35,37 +35,15 @@ bool Cell::survive(const Matrix<Cell, 3, 3>& input) {
 	}
 }
 
-void Cell::unload_block(const Matrix<Cell, BLOCKCELL, BLOCKCELL>& block, int x, int y) {
+void Cell::unload_block(const Matrix<Cell, BSC, BSC>& block, int x, int y) {
 	ofstream ofs(".\\cache\\block[" + to_string(x) + ", " + to_string(y) + "].bin", ios::binary);
 	if (ofs.is_open()) {
-		for (int row = 0; row < BLOCKCELL; row++) {
-			for (int col = 0; col < BLOCKCELL; col++) {
+		for (int row = 0; row < BSC; row++) {
+			for (int col = 0; col < BSC; col++) {
 				ofs << block(row, col).alive << ' '
 					<< block(row, col).active << endl;
 			}
 		}
 		ofs.close();
-	}
-}
-void Cell::load_block(Block<Matrix<Cell, WHOLECELL, WHOLECELL, 0, WHOLECELL, WHOLECELL>, BLOCKCELL, BLOCKCELL> block, int x, int y) {
-	ifstream ifs(".\\cache\\block[" + to_string(x) + ", " + to_string(y) + "].bin", ios::binary);
-	int alive = 0, active = 0;
-	if (ifs.is_open()) {
-		for (int row = 0; row < BLOCKCELL; row++) {
-			for (int col = 0; col < BLOCKCELL; col++) {
-				ifs >> alive >> active;
-				block(row, col).alive = (bool)alive;
-				block(row, col).active = (bool)active;
-			}
-		}
-		ifs.close();
-	}
-	else {
-		for (int row = 0; row < BLOCKCELL; row++) {
-			for (int col = 0; col < BLOCKCELL; col++) {
-				block(row, col).alive = 0;
-				block(row, col).active = 0;
-			}
-		}
 	}
 }

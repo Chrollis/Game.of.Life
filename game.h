@@ -13,7 +13,8 @@ public:
 	void quit();
 private:
 	void zoom();
-	void camera_move();
+	void expand(int s);
+	bool camera_move();
 	void centre_move(int x, int y);
 	void cell_click(bool alive);
 private:
@@ -28,11 +29,12 @@ private:
 	bool moving[4] = { 0,0,0,0 };
 	bool zooming[2] = { 0,0 };
 	clock_t compute_interval = 300;
-	int scale = ORISCALE;
-	POINT centre = { 2,2 };
+	int scale = ORI_SCALE;
+	int wsb = ORI_WSB;//whole side block num
+	POINT centre = { ORI_WSB / 2,ORI_WSB / 2 };
 	POINT cursor = { 0,0 };
 private:
-	Matrix<Cell, WHOLECELL, WHOLECELL> cells;
+	Matrix<Cell, -1, -1 >* cells;
 	enum Direction4 {
 		UP,
 		DOWN,

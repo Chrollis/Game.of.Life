@@ -69,7 +69,7 @@ void FpsController::draw() {
     std::ostringstream oss;
     oss << "Fps = " << actual_fps << " : " << fps_target;
     settextcolor(LIGHTGRAY);
-    settextstyle(ORISCALE / 2, 0, L"Times New Roman", 0, 0, 0, 1, 0, 0);
+    settextstyle(ORI_SCALE / 2, 0, L"Times New Roman", 0, 0, 0, 1, 0, 0);
     setbkmode(TRANSPARENT);
-    outtextxy(ORISCALE / 10, GRAPHSIZE - ORISCALE / 10 * 6, string_to_lpcwstr(oss.str()));
+    outtextxy(ORI_SCALE / 10, GRAPH_SIZE - ORI_SCALE / 10 * 6, string_to_lpcwstr(oss.str()));
 }

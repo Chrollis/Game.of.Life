@@ -1,7 +1,7 @@
 #include "game.h"
 
 void Game::enter() {
-	cells = Matrix<Cell, WHOLECELL, WHOLECELL>(WHOLECELL, WHOLECELL);
+	cells = new Matrix<Cell, -1, -1>(wsb * BSC , wsb * BSC);
 	CreateDirectoryA(".\\cache", nullptr);
 }
 void Game::proceed(clock_t delta) {
@@ -9,16 +9,16 @@ void Game::proceed(clock_t delta) {
 	static clock_t move_timer = 0;
 	if (running) {
 		if (compute_timer >= compute_interval) {
-			Matrix<Cell, WHOLECELL, WHOLECELL> copies = cells;
-			for (int row = 1; row < WHOLECELL - 1; row++) {
-				for (int col = 1; col < WHOLECELL - 1; col++) {
-					if (cells(row, col).active) {
-						if (cells(row, col).survive(copies.block<3, 3>(row - 1, col - 1))) {
+			Matrix<Cell, -1 , -1 > copies = *cells;
+			for (int row = 1; row < wsb * BSC  - 1; row++) {
+				for (int col = 1; col < wsb * BSC  - 1; col++) {
+					if ((*cells)(row, col).active) {
+						if ((*cells)(row, col).survive(copies.block<3, 3>(row - 1, col - 1))) {
 							for (int r = 0; r < 5; r++) {
 								for (int c = 0; c < 5; c++) {
-									if (row - 2 + r >= 0 && row - 2 + r < WHOLECELL) {
-										if (col - 2 + c >= 0 && col - 2 + c < WHOLECELL) {
-											cells(row - 2 + r, col - 2 + c).active = 1;
+									if (row - 2 + r >= 0 && row - 2 + r < wsb * BSC ) {
+										if (col - 2 + c >= 0 && col - 2 + c < wsb * BSC ) {
+											(*cells)(row - 2 + r, col - 2 + c).active = 1;
 										}
 									}
 								}
@@ -33,7 +33,7 @@ void Game::proceed(clock_t delta) {
 	}
 	if (move_timer >= 42) {
 		zoom();
-		camera_move();
+		while (camera_move());
 		move_timer = 0;
 	}
 	move_timer += delta;
@@ -78,11 +78,21 @@ void Game::input(const ExMessage& msg) {
 			break;
 		case 'I':
 		case VK_OEM_PLUS:
+			if (ctrl) {
+				expand(LARGE);
+			}
+			else {
 			zooming[LARGE] = 1;
+			}
 			break;
 		case 'K':
 		case VK_OEM_MINUS:
+			if (ctrl) {
+				expand(SMALL);
+			}
+			else {
 			zooming[SMALL] = 1;
+			}
 			break;
 		case VK_SPACE:
 			running = !running;
@@ -152,13 +162,13 @@ void Game::input(const ExMessage& msg) {
 	}
 }
 void Game::draw() {
-	int visible = GRAPHSIZE / scale;
-	int x = (camera.x + BLOCKCELL * 2 * scale) / scale * scale - camera.x - BLOCKCELL * 2 * scale;
-	int y = (camera.y + BLOCKCELL * 2 * scale) / scale * scale - camera.y - BLOCKCELL * 2 * scale;
+	int visible = GRAPH_SIZE / scale;
+	int x = (camera.x + BSC * (wsb / 2) * scale) / scale * scale - camera.x - BSC * (wsb / 2) * scale;
+	int y = (camera.y + BSC * (wsb / 2) * scale) / scale * scale - camera.y - BSC * (wsb / 2) * scale;
 	for (int row = -1; row <= visible; row++) {
 		for (int col = -1; col <= visible; col++) {
-			if (cells((camera.y + BLOCKCELL * 2 * scale) / scale + row,
-				(camera.x + BLOCKCELL * 2 * scale) / scale + col).alive) {
+			if ((*cells)((camera.y + BSC * (wsb / 2) * scale) / scale + row,
+				(camera.x + BSC * (wsb / 2) * scale) / scale + col).alive) {
 				setfillcolor(WHITE);
 				fillrectangle(x + col * scale, y + row * scale,
 					x + col * scale + scale, y + row * scale + scale);
@@ -170,34 +180,94 @@ void Game::draw() {
 	}
 	setlinecolor(LIGHTGRAY);
 	setfillcolor(LIGHTGRAY);
-	circle(GRAPHSIZE / 2, GRAPHSIZE / 2, ORISCALE / 10);
-	solidcircle(GRAPHSIZE / 2, GRAPHSIZE / 2, ORISCALE / 25);
+	circle(GRAPH_SIZE / 2, GRAPH_SIZE / 2, ORI_SCALE / 10);
+	solidcircle(GRAPH_SIZE / 2, GRAPH_SIZE / 2, ORI_SCALE / 25);
+	settextcolor(LIGHTGRAY);
+	settextstyle(ORI_SCALE / 2, 0, L"Times New Roman", 0, 0, 0, 1, 0, 0);
+	setbkmode(TRANSPARENT);
 	ostringstream oss;
 	oss << "Camera(" << camera.x << ", " << camera.y << ")";
-	settextcolor(LIGHTGRAY);
-	settextstyle(ORISCALE / 2, 0, L"Times New Roman", 0, 0, 0, 1, 0, 0);
-	setbkmode(TRANSPARENT);
-	outtextxy(ORISCALE / 10, ORISCALE / 10, string_to_lpcwstr(oss.str()));
-	if (ctrl) {
-		oss.str("");
-		oss << "Block(" << (camera.x + cursor.x + BLOCKCELL * centre.x * scale) / scale
-			<< ", " << (camera.y + cursor.y + BLOCKCELL * centre.y * scale) / scale << ")";
-		outtextxy(ORISCALE / 10, GRAPHSIZE - ORISCALE / 10 * 11, string_to_lpcwstr(oss.str()));
+	outtextxy(ORI_SCALE / 10, ORI_SCALE / 10, string_to_lpcwstr(oss.str()));
+	if (running) {
+		outtextxy(ORI_SCALE / 10, ORI_SCALE / 10 * 6, L"The Game is Running");
 	}
+	else {
+		outtextxy(ORI_SCALE / 10, ORI_SCALE / 10 * 6, L"The Game has Paused");
+	}
+	oss.str("");
+	oss << "Side length = " << BSC * wsb << " cells";
+	outtextxy(ORI_SCALE / 10, ORI_SCALE / 10 * 11, string_to_lpcwstr(oss.str()));
+	oss.str("");
+	oss << "Scale = " << scale << " pixel per cell";
+	outtextxy(ORI_SCALE / 10, ORI_SCALE / 10 * 16, string_to_lpcwstr(oss.str()));
+	oss.str("");
+	oss << "Focus on (" << (camera.x + GRAPH_SIZE / 2 + BSC * centre.x * scale) / scale
+		<< ", " << (camera.y + GRAPH_SIZE / 2 + BSC * centre.y * scale) / scale << ")";
+	outtextxy(ORI_SCALE / 10, GRAPH_SIZE - ORI_SCALE / 10 * 11, string_to_lpcwstr(oss.str()));
+	oss.str("");
+	oss << "Cursor on (" << (camera.x + cursor.x + BSC * centre.x * scale) / scale
+		<< ", " << (camera.y + cursor.y + BSC * centre.y * scale) / scale << ")";
+	outtextxy(ORI_SCALE / 10, GRAPH_SIZE - ORI_SCALE / 10 * 16, string_to_lpcwstr(oss.str()));
 }
 void Game::quit() {
 	clear_directory(L".\\cache");
+	delete cells;
 }
 void Game::zoom() {
-	int ds = (zooming[LARGE] - zooming[SMALL]) * 5;
+	int ds = zooming[LARGE] - zooming[SMALL];
 
-	if (scale + ds >= 25) {
-		camera.x = ((scale + ds) * camera.x + GRAPHSIZE / 2 * ds) / scale;
-		camera.y = ((scale + ds) * camera.y + GRAPHSIZE / 2 * ds) / scale;
+	if (scale + ds > (int)(double(GRAPH_SIZE) / ((wsb - 2) * BSC - 2)) + 4) {
+		camera.x = ((scale + ds) * camera.x + GRAPH_SIZE / 2 * ds) / scale;
+		camera.y = ((scale + ds) * camera.y + GRAPH_SIZE / 2 * ds) / scale;
 		scale += ds;
 	}
 }
-void Game::camera_move() {
+void Game::expand(int s) {
+	if (s == LARGE) {
+		if (wsb + 2 < 10) {
+			Matrix<Cell, -1, -1> copies = *cells;
+			delete cells;
+			wsb += 2;
+			cells = new Matrix<Cell, -1, -1>(wsb * BSC, wsb * BSC);
+			cells->block(BSC, BSC, (wsb - 2) * BSC, (wsb - 2) * BSC) = copies;
+			for (int i = 0; i < wsb; i++) {
+				Cell::load_block(cells->block<BSC, BSC>(i * BSC, 0), centre.x - wsb / 2, centre.y + i - wsb / 2);
+				Cell::load_block(cells->block<BSC, BSC>(i * BSC, (wsb - 1) * BSC), centre.x + wsb / 2, centre.y + i - wsb / 2);
+			}
+			for (int i = 1; i < wsb - 1; i++) {
+				Cell::load_block(cells->block<BSC, BSC>(0, i * BSC), centre.x + i - wsb / 2, centre.y - wsb / 2);
+				Cell::load_block(cells->block<BSC, BSC>((wsb - 1) * BSC, i * BSC), centre.x + i - wsb / 2, centre.y + wsb / 2);
+			}
+		}
+	}
+	else if (s == SMALL) {
+		if (wsb - 2 > 4) {
+			if (scale >= (int)(double(GRAPH_SIZE) / ((wsb - 4) * BSC - 2)) + 4) {
+				Matrix<Cell, -1, -1> copies = *cells;
+				delete cells;
+				cells = new Matrix<Cell, -1, -1>((wsb - 2) * BSC, (wsb - 2) * BSC);
+				*cells = copies.block(BSC, BSC, (wsb - 2) * BSC, (wsb - 2) * BSC);
+				for (int i = 0; i < wsb; i++) {
+					Cell::unload_block(copies.block<BSC, BSC>(i * BSC, 0), centre.x - wsb / 2, centre.y + i - wsb / 2);
+					Cell::unload_block(copies.block<BSC, BSC>(i * BSC, (wsb - 1) * BSC), centre.x + wsb / 2, centre.y + i - wsb / 2);
+				}
+				for (int i = 1; i < wsb - 1; i++) {
+					Cell::unload_block(copies.block<BSC, BSC>(0, i * BSC), centre.x + i - wsb / 2, centre.y - wsb / 2);
+					Cell::unload_block(copies.block<BSC, BSC>((wsb - 1) * BSC, i * BSC), centre.x + i - wsb / 2, centre.y + wsb / 2);
+				}
+				wsb -= 2;
+			}
+			else {
+				int ds = (int)(double(GRAPH_SIZE) / ((wsb - 4) * BSC - 2)) + 4 - scale;
+				camera.x = ((scale + ds) * camera.x + GRAPH_SIZE / 2 * ds) / scale;
+				camera.y = ((scale + ds) * camera.y + GRAPH_SIZE / 2 * ds) / scale;
+				while (camera_move());
+				scale += ds;
+			}
+		}
+	}
+}
+bool Game::camera_move() {
 	int dx = moving[RIGHT] - moving[LEFT];
 	int dy = moving[DOWN] - moving[UP];
 	double dl = sqrt(dx * dx + dy * dy);
@@ -212,59 +282,61 @@ void Game::camera_move() {
 	dx = (int)(camera.speed * dx * dl);
 	dy = (int)(camera.speed * dy * dl);
 
-	if (abs(camera.x + dx) <= BLOCKCELL * scale) {
+	if (abs(camera.x + dx) <= BSC * scale) {
 		camera.x += dx;
 	}
-	if (abs(camera.y + dy) <= BLOCKCELL * scale) {
+	if (abs(camera.y + dy) <= BSC * scale) {
 		camera.y += dy;
 	}
-	if (abs(camera.x + camera.y) + abs(camera.x - camera.y) >= 2 * (BLOCKCELL - 2) * scale) {
-		int x = (camera.x + BLOCKCELL * scale) / (BLOCKCELL * scale * 2 / 3) - 1;
-		int y = (camera.y + BLOCKCELL * scale) / (BLOCKCELL * scale * 2 / 3) - 1;
+	if (abs(camera.x + camera.y) + abs(camera.x - camera.y) >= 2 * (BSC - 2) * scale) {
+		int x = (camera.x + BSC * scale) / (BSC * scale * 2 / 3) - 1;
+		int y = (camera.y + BSC * scale) / (BSC * scale * 2 / 3) - 1;
 		centre_move(x, y);
+		return 1;
 	}
+	return 0;
 }
 void Game::centre_move(int x, int y) {
 	if (x != 0) {
-		for (int i = 0; i < 5; i++) {
-			Cell::unload_block(cells.block<BLOCKCELL, BLOCKCELL>(i * BLOCKCELL, -2 * (x - 1) * BLOCKCELL),
-				centre.x - 2 * x, centre.y + i - 2);
+		for (int i = 0; i < wsb; i++) {
+			Cell::unload_block(cells->block<BSC, BSC>(i * BSC, -(wsb / 2) * (x - 1) * BSC),
+				centre.x - (wsb / 2) * x, centre.y + i - wsb / 2);
 		}
-		Matrix<Cell, 5 * BLOCKCELL, 4 * BLOCKCELL> copies = 
-			cells.block<5 * BLOCKCELL, 4 * BLOCKCELL>(0, BLOCKCELL * (1 + x) / 2);
-		cells.block<5 * BLOCKCELL, 4 * BLOCKCELL>(0, BLOCKCELL * (1 - x) / 2) = copies;
+		Matrix<Cell, -1, -1> copies =
+			cells->block(0, BSC * (1 + x) / 2, wsb * BSC, (wsb - 1) * BSC);
+		cells->block(0, BSC * (1 - x) / 2, wsb * BSC, (wsb - 1) * BSC) = copies;
 		centre.x += x;
-		camera.x -= x * BLOCKCELL * scale;
-		for (int i = 0; i < 5; i++) {
-			Cell::load_block(cells.block<BLOCKCELL, BLOCKCELL>(i * BLOCKCELL, 2 * (x + 1) * BLOCKCELL),
-				centre.x + 2 * x, centre.y + i - 2);
+		camera.x -= x * BSC * scale;
+		for (int i = 0; i < wsb; i++) {
+			Cell::load_block(cells->block<BSC, BSC>(i * BSC, (wsb / 2) * (x + 1) * BSC),
+				centre.x + (wsb / 2) * x, centre.y + i - wsb / 2);
 		}
 	}
 	if (y != 0) {
-		for (int i = 0; i < 5; i++) {
-			Cell::unload_block(cells.block<BLOCKCELL, BLOCKCELL>(-2 * (y - 1) * BLOCKCELL, i * BLOCKCELL),
-				centre.x + i - 2, centre.y - 2 * y);
+		for (int i = 0; i < wsb; i++) {
+			Cell::unload_block(cells->block<BSC, BSC>(-(wsb / 2) * (y - 1) * BSC, i * BSC),
+				centre.x + i - wsb / 2, centre.y - (wsb / 2) * y);
 		}
-		Matrix<Cell, 4 * BLOCKCELL, 5 * BLOCKCELL> copies =
-			cells.block<4 * BLOCKCELL, 5 * BLOCKCELL>(BLOCKCELL * (1 + y) / 2, 0);
-		cells.block<4 * BLOCKCELL, 5 * BLOCKCELL>(BLOCKCELL * (1 - y) / 2, 0) = copies;
+		Matrix<Cell, -1, -1> copies =
+			cells->block(BSC * (1 + y) / 2, 0, (wsb - 1) * BSC, wsb * BSC);
+		cells->block(BSC * (1 - y) / 2, 0, (wsb - 1) * BSC, wsb * BSC) = copies;
 		centre.y += y;
-		camera.y -= y * BLOCKCELL * scale;
-		for (int i = 0; i < 5; i++) {
-			 Cell::load_block(cells.block<BLOCKCELL, BLOCKCELL>(2 * (y + 1) * BLOCKCELL, i * BLOCKCELL),
-				 centre.x + i - 2, centre.y + 2 * y);
+		camera.y -= y * BSC * scale;
+		for (int i = 0; i < wsb; i++) {
+			 Cell::load_block(cells->block<BSC, BSC>((wsb / 2) * (y + 1) * BSC, i * BSC),
+				 centre.x + i - wsb / 2, centre.y + (wsb / 2) * y);
 		}
 	}
 }
 void Game::cell_click(bool alive) {
-	int x = (camera.x + cursor.x + BLOCKCELL * 2 * scale) / scale;
-	int y = (camera.y + cursor.y + BLOCKCELL * 2 * scale) / scale;
-	cells(y, x).alive = alive;
+	int x = (camera.x + cursor.x + BSC * (wsb / 2) * scale) / scale;
+	int y = (camera.y + cursor.y + BSC * (wsb / 2) * scale) / scale;
+	(*cells)(y, x).alive = alive;
 	for (int r = 0; r < 3; r++) {
 		for (int c = 0; c < 3; c++) {
-			if (y - 1 + r >= 0 && y - 1 + r < WHOLECELL) {
-				if (x - 1 + c >= 0 && x - 1 + c < WHOLECELL) {
-					cells(y - 1 + r, x - 1 + c).active = 1;
+			if (y - 1 + r >= 0 && y - 1 + r < wsb * BSC ) {
+				if (x - 1 + c >= 0 && x - 1 + c < wsb * BSC ) {
+					(*cells)(y - 1 + r, x - 1 + c).active = 1;
 				}
 			}
 		}
