@@ -31,7 +31,7 @@ bool Cell::survive(const Matrix<Cell, 3, 3>& input) {
 	}
 	else {
 		active = 0;
-		return 0;
+		return alive;
 	}
 }
 
