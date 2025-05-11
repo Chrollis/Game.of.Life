@@ -7,6 +7,7 @@ void Game::enter() {
 void Game::proceed(clock_t delta) {
 	static clock_t compute_timer = 0;
 	static clock_t move_timer = 0;
+	static clock_t expand_timer = 0;
 	if (running) {
 		if (compute_timer >= compute_interval) {
 			Matrix<Cell, -1 , -1 > copies = *cells;
@@ -31,12 +32,22 @@ void Game::proceed(clock_t delta) {
 		}
 		compute_timer += delta;
 	}
+	if (expanding == LARGE || expanding == SMALL) {
+		if (expand_timer >= 504) {
+			expand(expanding);
+			while (camera_move());
+			expanding = -1;
+			expand_timer = 0;
+		}
+		expand_timer += delta;
+	}
 	if (move_timer >= 42) {
 		zoom();
 		while (camera_move());
 		move_timer = 0;
 	}
 	move_timer += delta;
+	
 }
 void Game::input(const ExMessage& msg) {
 	switch (msg.message) {
@@ -79,7 +90,7 @@ void Game::input(const ExMessage& msg) {
 		case 'I':
 		case VK_OEM_PLUS:
 			if (ctrl) {
-				expand(LARGE);
+				expanding = LARGE;
 			}
 			else {
 			zooming[LARGE] = 1;
@@ -88,7 +99,7 @@ void Game::input(const ExMessage& msg) {
 		case 'K':
 		case VK_OEM_MINUS:
 			if (ctrl) {
-				expand(SMALL);
+				expanding = SMALL;
 			}
 			else {
 			zooming[SMALL] = 1;
@@ -131,11 +142,21 @@ void Game::input(const ExMessage& msg) {
 			break;
 		case 'I':
 		case VK_OEM_PLUS:
-			zooming[LARGE] = 0;
+			if (ctrl) {
+				expanding = -1;
+			}
+			else {
+				zooming[LARGE] = 0;
+			}
 			break;
 		case 'K':
 		case VK_OEM_MINUS:
-			zooming[SMALL] = 0;
+			if (ctrl) {
+				expanding = -1;
+			}
+			else {
+				zooming[SMALL] = 0;
+			}
 			break;
 		case VK_SHIFT:
 			shift = 0;
@@ -216,7 +237,7 @@ void Game::quit() {
 void Game::zoom() {
 	int ds = zooming[LARGE] - zooming[SMALL];
 
-	if (scale + ds > (int)(double(GRAPH_SIZE) / ((wsb - 2) * BSC - 2)) + 4) {
+	if (scale + ds > (int)(double(GRAPH_SIZE) / ((wsb - 3) * BSC)) + 4) {
 		camera.x = ((scale + ds) * camera.x + GRAPH_SIZE / 2 * ds) / scale;
 		camera.y = ((scale + ds) * camera.y + GRAPH_SIZE / 2 * ds) / scale;
 		scale += ds;
@@ -224,7 +245,7 @@ void Game::zoom() {
 }
 void Game::expand(int s) {
 	if (s == LARGE) {
-		if (wsb + 2 < 10) {
+		if (wsb + 2 < 17) {
 			Matrix<Cell, -1, -1> copies = *cells;
 			delete cells;
 			wsb += 2;
@@ -242,26 +263,25 @@ void Game::expand(int s) {
 	}
 	else if (s == SMALL) {
 		if (wsb - 2 > 4) {
-			if (scale >= (int)(double(GRAPH_SIZE) / ((wsb - 4) * BSC - 2)) + 4) {
+			if (scale >= (int)(double(GRAPH_SIZE) / ((wsb - 5) * BSC)) + 4) {
 				Matrix<Cell, -1, -1> copies = *cells;
 				delete cells;
-				cells = new Matrix<Cell, -1, -1>((wsb - 2) * BSC, (wsb - 2) * BSC);
-				*cells = copies.block(BSC, BSC, (wsb - 2) * BSC, (wsb - 2) * BSC);
-				for (int i = 0; i < wsb; i++) {
-					Cell::unload_block(copies.block<BSC, BSC>(i * BSC, 0), centre.x - wsb / 2, centre.y + i - wsb / 2);
-					Cell::unload_block(copies.block<BSC, BSC>(i * BSC, (wsb - 1) * BSC), centre.x + wsb / 2, centre.y + i - wsb / 2);
-				}
-				for (int i = 1; i < wsb - 1; i++) {
-					Cell::unload_block(copies.block<BSC, BSC>(0, i * BSC), centre.x + i - wsb / 2, centre.y - wsb / 2);
-					Cell::unload_block(copies.block<BSC, BSC>((wsb - 1) * BSC, i * BSC), centre.x + i - wsb / 2, centre.y + wsb / 2);
-				}
 				wsb -= 2;
+				cells = new Matrix<Cell, -1, -1>(wsb * BSC, wsb * BSC);
+				*cells = copies.block(BSC, BSC, wsb * BSC, wsb * BSC);
+				for (int i = 0; i < wsb + 2; i++) {
+					Cell::unload_block(copies.block<BSC, BSC>(i * BSC, 0), centre.x - (wsb + 2) / 2, centre.y + i - (wsb + 2) / 2);
+					Cell::unload_block(copies.block<BSC, BSC>(i * BSC, (wsb + 1) * BSC), centre.x + (wsb + 2) / 2, centre.y + i - (wsb + 2) / 2);
+				}
+				for (int i = 1; i < wsb + 1; i++) {
+					Cell::unload_block(copies.block<BSC, BSC>(0, i * BSC), centre.x + i - (wsb + 2) / 2, centre.y - (wsb + 2) / 2);
+					Cell::unload_block(copies.block<BSC, BSC>((wsb + 1) * BSC, i * BSC), centre.x + i - (wsb + 2) / 2, centre.y + (wsb + 2) / 2);
+				}
 			}
 			else {
-				int ds = (int)(double(GRAPH_SIZE) / ((wsb - 4) * BSC - 2)) + 4 - scale;
+				int ds = (int)(double(GRAPH_SIZE) / ((wsb - 5) * BSC)) + 4 - scale;
 				camera.x = ((scale + ds) * camera.x + GRAPH_SIZE / 2 * ds) / scale;
 				camera.y = ((scale + ds) * camera.y + GRAPH_SIZE / 2 * ds) / scale;
-				while (camera_move());
 				scale += ds;
 			}
 		}

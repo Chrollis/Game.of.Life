@@ -28,6 +28,7 @@ private:
 	bool ctrl = 0;
 	bool moving[4] = { 0,0,0,0 };
 	bool zooming[2] = { 0,0 };
+	int expanding = -1;
 	clock_t compute_interval = 300;
 	int scale = ORI_SCALE;
 	int wsb = ORI_WSB;//whole side block num
